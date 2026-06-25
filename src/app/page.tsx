@@ -15,7 +15,11 @@ import ParliamentTab from '@/components/ParliamentTab';
 import VotingScreen from '@/components/VotingScreen';
 import { useGameStore } from '@/store/gameStore';
 
+import MainMenu from '@/components/MainMenu';
+import SettingsScreen from '@/components/SettingsScreen';
+
 export default function Home() {
+  const currentScreen = useGameStore(state => state.currentScreen);
   const countryName = useGameStore(state => state.countryName);
   const year = useGameStore(state => state.year);
   const month = useGameStore(state => state.month);
@@ -25,11 +29,19 @@ export default function Home() {
 
   const [activeTab, setActiveTab] = useState<'policy' | 'parliament' | 'cabinet' | 'world'>('policy');
 
-  if (!countryName) {
+  if (currentScreen === 'menu') {
+    return <MainMenu />;
+  }
+
+  if (currentScreen === 'settings') {
+    return <SettingsScreen />;
+  }
+
+  if (currentScreen === 'setup') {
     return <CountrySelection />;
   }
 
-  if (isGameOver) {
+  if (currentScreen === 'game_over') {
     return <LegacyScreen />;
   }
 

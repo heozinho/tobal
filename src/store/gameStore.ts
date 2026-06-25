@@ -78,6 +78,7 @@ export interface ProposedBill {
 }
 
 export interface GameState {
+  currentScreen: 'menu' | 'settings' | 'setup' | 'playing' | 'game_over';
   countryName: string | null;
   year: number;
   month: number;
@@ -112,6 +113,7 @@ export interface GameState {
   mobilizeMilitary: () => void;
   sueForPeace: (nationName: string) => void;
   resign: () => void;
+  setScreen: (screen: 'menu' | 'settings' | 'setup' | 'playing' | 'game_over') => void;
   playAgain: () => void;
 }
 
@@ -151,6 +153,7 @@ const defaultBudget: Budget = {
 };
 
 export const useGameStore = create<GameState>((set, get) => ({
+  currentScreen: 'menu',
   countryName: null,
   year: 2000,
   month: 1,
@@ -187,6 +190,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     set({ 
+      currentScreen: 'playing',
       countryName: name, 
       leaderTrait: trait,
       stats: newStats, 
@@ -344,6 +348,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       // GAME OVER (Loss by approval, or Win by surviving to 2020)
       return {
         isGameOver: true,
+        currentScreen: 'game_over'
       };
     }
 
@@ -509,10 +514,16 @@ export const useGameStore = create<GameState>((set, get) => ({
   }),
 
   resign: () => set({
-    isGameOver: true
+    isGameOver: true,
+    currentScreen: 'game_over'
+  }),
+
+  setScreen: (screen) => set({
+    currentScreen: screen
   }),
 
   playAgain: () => set({
+    currentScreen: 'menu',
     countryName: null,
     isGameOver: false
   })
