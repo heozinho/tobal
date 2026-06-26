@@ -5,7 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 export default function SettingsScreen() {
   const setScreen = useGameStore(state => state.setScreen);
   const [difficulty, setDifficulty] = useState('Normal');
-  const [aiModel, setAiModel] = useState('Gemini 2.5 Flash-8B');
+
 
   return (
     <div className="container" style={{ maxWidth: '600px', marginTop: '5vh' }}>
@@ -32,24 +32,7 @@ export default function SettingsScreen() {
             </p>
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 'var(--spacing-xs)', color: 'var(--text-secondary)' }}>AI Engine</label>
-            <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
-              {['Gemini 2.5 Flash-8B', 'Gemini 2.5 Pro'].map(model => (
-                <button
-                  key={model}
-                  className={`btn ${aiModel === model ? 'btn-primary' : ''}`}
-                  style={{ flex: 1 }}
-                  onClick={() => setAiModel(model)}
-                >
-                  {model}
-                </button>
-              ))}
-            </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 'var(--spacing-xs)' }}>
-              (Currently locked to Flash-8B for speed)
-            </p>
-          </div>
+
 
           <div>
             <label style={{ display: 'block', marginBottom: 'var(--spacing-xs)', color: 'var(--text-secondary)' }}>Audio Volume</label>

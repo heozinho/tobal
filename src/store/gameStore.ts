@@ -1,10 +1,12 @@
 import { create } from 'zustand';
+import { CountryOption } from '@/data/countries';
 import { GameEvent, gameEvents } from '@/data/events';
 import { calculateMonthlyEconomics, calculateDynamicInflationAndGrowth, updateCreditRating } from '@/lib/economy';
 import { calculateElectionResults } from '@/lib/parliament';
 import { calculateCombatTick } from '@/lib/combat';
 import { initialWorldNations } from '@/data/world';
 
+// Traits system will replace this soon, but we keep it for now as a string array
 export type LeaderTrait = 'Charismatic' | 'Economist' | 'Militarist' | 'Corrupt' | 'None';
 
 export interface WorldNation {
@@ -78,11 +80,14 @@ export interface ProposedBill {
 }
 
 export interface GameState {
-  currentScreen: 'menu' | 'settings' | 'setup' | 'playing' | 'game_over';
+  currentScreen: 'menu' | 'settings' | 'setup' | 'character_creation' | 'playing' | 'game_over';
   countryName: string | null;
   year: number;
   month: number;
-  leaderTrait: LeaderTrait;
+  playerName: string;
+  playerAge: number;
+  playerTraits: string[];
+  selectedCountryData: CountryOption | null;
   isGameOver: boolean;
   monthsUnder20Approval: number;
   legacyScore: number;
@@ -98,7 +103,8 @@ export interface GameState {
   activeEvent: GameEvent | null;
   proposedBill: ProposedBill | null;
   
-  selectCountry: (name: string, stats: CountryStats, budget: Budget, factions: Factions, ministers: Minister[], trait: LeaderTrait) => void;
+  selectCountry: (country: CountryOption) => void;
+  startCampaign: (name: string, age: number, traits: string[]) => void;
   updateBudget: (budget: Partial<Budget>) => void;
   addHeadline: (headline: string) => void;
   applyPolicyEffect: (statsDiff: Partial<CountryStats>, factionDiffs?: Partial<Factions>) => void;
@@ -113,7 +119,7 @@ export interface GameState {
   mobilizeMilitary: () => void;
   sueForPeace: (nationName: string) => void;
   resign: () => void;
-  setScreen: (screen: 'menu' | 'settings' | 'setup' | 'playing' | 'game_over') => void;
+  setScreen: (screen: 'menu' | 'settings' | 'setup' | 'character_creation' | 'playing' | 'game_over') => void;
   playAgain: () => void;
 }
 
@@ -157,7 +163,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   countryName: null,
   year: 2000,
   month: 1,
-  leaderTrait: 'None',
+  playerName: 'Player',
+  playerAge: 40,
+  playerTraits: [],
+  selectedCountryData: null,
   isGameOver: false,
   monthsUnder20Approval: 0,
   legacyScore: 0,
@@ -173,7 +182,17 @@ export const useGameStore = create<GameState>((set, get) => ({
   activeEvent: null,
   proposedBill: null,
 
-  selectCountry: (name, stats, budget, factions, ministers, trait) => {
+  selectCountry: (country) => {
+    set({
+      selectedCountryData: country,
+      currentScreen: 'character_creation'
+    });
+  },
+
+  startCampaign: (name, age, traits) => {
+    const country = get().selectedCountryData;
+    if (!country) return;
+
     const initializedWorldNations: WorldNation[] = initialWorldNations.map(n => ({
       ...n,
       relationship: 0,
@@ -183,24 +202,27 @@ export const useGameStore = create<GameState>((set, get) => ({
       casualties: 0
     }));
 
-    let newStats = { ...stats };
-    if (trait === 'Corrupt') {
+    let newStats = { ...country.stats };
+    // Handle traits logic placeholder
+    if (traits.includes('Corrupt')) {
       newStats.treasury += 100;
       newStats.corruptionLevel += 5;
     }
 
     set({ 
       currentScreen: 'playing',
-      countryName: name, 
-      leaderTrait: trait,
+      countryName: country.name, 
+      playerName: name,
+      playerAge: age,
+      playerTraits: traits,
       stats: newStats, 
-      budget,
-      factions,
-      parliamentSeats: calculateElectionResults(factions),
+      budget: country.budget,
+      factions: country.factions,
+      parliamentSeats: calculateElectionResults(country.factions),
       politicalCapital: 100,
       nextElectionYear: 2004,
-      ministers,
-      worldNations: initializedWorldNations.filter(n => n.name !== name),
+      ministers: country.ministers,
+      worldNations: initializedWorldNations.filter(n => n.name !== country.name),
       year: 2000,
       month: 1,
       isGameOver: false,
@@ -278,7 +300,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   advanceTime: () => set((state) => {
     if (state.isGameOver) return state;
 
-    const { year, month, stats, budget, headlines, leaderTrait, factions, monthsUnder20Approval, worldNations } = state;
+    const { year, month, stats, budget, headlines, playerTraits, factions, monthsUnder20Approval, worldNations } = state;
     
     let newYear = year;
     let newMonth = month + 1;
@@ -297,7 +319,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     // Apply Trait Passive
     let finalNetChange = economics.netChange;
-    if (leaderTrait === 'Economist') {
+    if (playerTraits.includes('Economist')) {
       finalNetChange += (economics.revenue * 0.05); // 5% boost to revenue
     }
 

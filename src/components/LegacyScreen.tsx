@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 
 export default function LegacyScreen() {
-  const { countryName, year, stats, factions, leaderTrait, headlines, playAgain } = useGameStore();
+  const { countryName, year, stats, factions, playerTraits, headlines, playAgain } = useGameStore();
   
   const [epitaph, setEpitaph] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +25,7 @@ export default function LegacyScreen() {
             endYear: year,
             stats,
             factions,
-            leaderTrait,
+            playerTraits,
             headlines
           })
         });
@@ -43,7 +43,7 @@ export default function LegacyScreen() {
     };
 
     fetchEpitaph();
-  }, [countryName, year, stats, factions, leaderTrait, headlines]);
+  }, [countryName, year, stats, factions, playerTraits, headlines]);
 
   return (
     <div className="container" style={{ maxWidth: '800px', marginTop: '5vh' }}>

@@ -22,7 +22,7 @@ export default function Dashboard() {
               style={{ backgroundColor: 'var(--status-bad)', color: '#000', fontWeight: 'bold' }}
               onClick={mobilizeMilitary}
             >
-              🚨 MOBILIZE MILITARY 🚨
+              MOBILIZE MILITARY
             </button>
           )}
           <button 

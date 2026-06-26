@@ -5,7 +5,7 @@ const ai = new GoogleGenAI({});
 
 export async function POST(req: Request) {
   try {
-    const { countryName, startYear, endYear, stats, factions, leaderTrait, headlines } = await req.json();
+    const { countryName, startYear, endYear, stats, factions, playerTraits, headlines } = await req.json();
 
     const overallApproval = Math.round((factions.workingClass + factions.middleClass + factions.business + factions.military + factions.religious + factions.youth) / 6);
     const yearsSurvived = endYear - startYear;
@@ -18,7 +18,7 @@ Their final statistics were:
 - National Debt: $${stats?.nationalDebt}B
 - Final Approval Rating: ${overallApproval}%
 - Casualties from War: ${stats?.casualties}
-- Leader Trait: ${leaderTrait}
+- Leader Traits: ${playerTraits?.join(', ') || 'None'}
 
 Some notable recent headlines from their rule:
 ${headlines.slice(0, 5).map((h: string) => `- ${h}`).join('\n')}

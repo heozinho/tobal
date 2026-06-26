@@ -5,6 +5,7 @@ import BudgetSliders from '@/components/BudgetSliders';
 import PolicyEntry from '@/components/PolicyEntry';
 import NewsFeed from '@/components/NewsFeed';
 import CountrySelection from '@/components/CountrySelection';
+import CharacterCreation from '@/components/CharacterCreation';
 import Cabinet from '@/components/Cabinet';
 import Factions from '@/components/Factions';
 import WorldStage from '@/components/WorldStage';
@@ -41,6 +42,10 @@ export default function Home() {
     return <CountrySelection />;
   }
 
+  if (currentScreen === 'character_creation') {
+    return <CharacterCreation />;
+  }
+
   if (currentScreen === 'game_over') {
     return <LegacyScreen />;
   }
@@ -63,7 +68,7 @@ export default function Home() {
           style={{ padding: '12px 24px', fontSize: '1.1rem', backgroundColor: 'var(--accent-primary)', color: '#000' }}
           onClick={() => advanceTime()}
         >
-          Next Month ⏩
+          Next Month &gt;&gt;
         </button>
       </div>
 

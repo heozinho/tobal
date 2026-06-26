@@ -1,200 +1,132 @@
 'use client';
-import { useState } from 'react';
-import { useGameStore, CountryStats, Budget, Factions, Minister, LeaderTrait } from '@/store/gameStore';
-
-interface CountryOption {
-  name: string;
-  difficulty: 1 | 2 | 3 | 4 | 5;
-  description: string;
-  stats: CountryStats;
-  budget: Budget;
-  factions: Factions;
-  ministers: Minister[];
-}
-
-const mockCountries: CountryOption[] = [
-  {
-    name: 'United States',
-    difficulty: 3,
-    description: 'Complex coalition politics, inequality, and global responsibility. A superpower with deep divides.',
-    stats: {
-      gdpPerCapita: 36200,
-      unemployment: 4.0,
-      inflation: 3.4,
-      nationalDebt: 5600,
-      treasury: 120,
-      corruptionLevel: 15,
-      creditRating: 'AAA',
-      militaryStrength: 100,
-      casualties: 0
-    },
-    budget: { 
-      taxIncomeLow: 15, taxIncomeMiddle: 25, taxIncomeHigh: 35, 
-      taxCorp: 35, taxVAT: 0, taxTariffs: 2, 
-      spendEducation: 15, spendInfrastructure: 10, spendWelfare: 20, 
-      spendMilitary: 16, spendHealth: 20 
-    },
-    factions: {
-      workingClass: 45,
-      middleClass: 55,
-      business: 65,
-      military: 60,
-      religious: 50,
-      youth: 40,
-    },
-    ministers: [
-      { id: '1', role: 'Finance', name: 'Robert Rubin', competence: 80, loyalty: 70, corruptionLevel: 10 },
-      { id: '2', role: 'Defense', name: 'William Cohen', competence: 75, loyalty: 80, corruptionLevel: 5 },
-    ]
-  },
-  {
-    name: 'Russia',
-    difficulty: 4,
-    description: 'Authoritarian pressures, oligarchic influence, and economic fragility following a turbulent decade.',
-    stats: {
-      gdpPerCapita: 1700,
-      unemployment: 10.6,
-      inflation: 20.2,
-      nationalDebt: 160,
-      treasury: 15,
-      corruptionLevel: 65,
-      creditRating: 'BB',
-      militaryStrength: 80,
-      casualties: 0
-    },
-    budget: { 
-      taxIncomeLow: 13, taxIncomeMiddle: 13, taxIncomeHigh: 13, 
-      taxCorp: 24, taxVAT: 20, taxTariffs: 5, 
-      spendEducation: 8, spendInfrastructure: 8, spendWelfare: 10, 
-      spendMilitary: 18, spendHealth: 10 
-    },
-    factions: {
-      workingClass: 30,
-      middleClass: 25,
-      business: 80,
-      military: 70,
-      religious: 60,
-      youth: 35,
-    },
-    ministers: [
-      { id: '3', role: 'Finance', name: 'Mikhail Kasyanov', competence: 60, loyalty: 40, corruptionLevel: 85 },
-      { id: '4', role: 'Defense', name: 'Igor Sergeyev', competence: 65, loyalty: 60, corruptionLevel: 50 },
-    ]
-  },
-  {
-    name: 'Norway',
-    difficulty: 1,
-    description: 'Wealthy, stable, high-trust society. Governing is fine-tuning the sovereign wealth fund.',
-    stats: {
-      gdpPerCapita: 35000,
-      unemployment: 4.0,
-      inflation: 3.4,
-      nationalDebt: 40,
-      treasury: 250,
-      corruptionLevel: 5,
-      creditRating: 'AAA',
-      militaryStrength: 40,
-      casualties: 0
-    },
-    budget: { 
-      taxIncomeLow: 25, taxIncomeMiddle: 35, taxIncomeHigh: 45, 
-      taxCorp: 28, taxVAT: 25, taxTariffs: 1, 
-      spendEducation: 20, spendInfrastructure: 15, spendWelfare: 30, 
-      spendMilitary: 8, spendHealth: 25 
-    },
-    factions: {
-      workingClass: 70,
-      middleClass: 75,
-      business: 60,
-      military: 50,
-      religious: 45,
-      youth: 65,
-    },
-    ministers: [
-      { id: '5', role: 'Finance', name: 'Karl Eirik Schjøtt-Pedersen', competence: 85, loyalty: 90, corruptionLevel: 2 },
-    ]
-  }
-];
+import { useState, useMemo } from 'react';
+import { useGameStore } from '@/store/gameStore';
+import { gameCountries, CountryOption } from '@/data/countries';
 
 export default function CountrySelection() {
   const selectCountry = useGameStore(state => state.selectCountry);
-  const [selectedTrait, setSelectedTrait] = useState<LeaderTrait>('None');
+  const [search, setSearch] = useState('');
+  const [previewCountry, setPreviewCountry] = useState<CountryOption>(gameCountries[0]);
 
-  const handleSelectCountry = (country: CountryOption) => {
-    selectCountry(country.name, country.stats, country.budget, country.factions, country.ministers, selectedTrait);
+  const filteredCountries = useMemo(() => {
+    return gameCountries.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  }, [search]);
+
+  const handleSelectCountry = () => {
+    selectCountry(previewCountry);
+  };
+
+  const renderDifficultyDots = (diff: number) => {
+    const dots = [];
+    const color = diff === 1 ? 'var(--status-good)' : diff === 2 ? 'var(--status-warning)' : 'var(--status-bad)';
+    for (let i = 0; i < diff; i++) {
+      dots.push(<div key={i} style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: color, display: 'inline-block' }} />);
+    }
+    return <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>{dots}</div>;
   };
 
   return (
-    <div className="container" style={{ maxWidth: '800px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
+    <div className="container" style={{ maxWidth: '1000px', paddingBottom: '5vh' }}>
+      <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
         <h1 style={{ fontSize: '3rem', color: 'var(--accent-primary)', marginBottom: 'var(--spacing-sm)' }}>TOBAL</h1>
-        <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>Select your starting nation and leader trait. The year is 2000.</p>
+        <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>Select your starting nation. The year is 2000.</p>
       </div>
 
-      <div className="card" style={{ marginBottom: 'var(--spacing-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Leader Trait Selection</h3>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>Choose a trait that will provide passive modifiers throughout your tenure.</p>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          {(['None', 'Charismatic', 'Economist', 'Militarist', 'Corrupt'] as LeaderTrait[]).map(trait => (
-            <label key={trait} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <input 
-                type="radio" 
-                name="leaderTrait" 
-                value={trait} 
-                checked={selectedTrait === trait}
-                onChange={() => setSelectedTrait(trait)}
-              />
-              {trait}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid" style={{ gap: 'var(--spacing-lg)' }}>
-        {mockCountries.map((country) => {
-          const overallApproval = Math.round((country.factions.workingClass + country.factions.middleClass + country.factions.business + country.factions.military + country.factions.religious + country.factions.youth) / 6);
-          return (
-            <div key={country.name} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0 }}>{country.name}</h2>
-                <div style={{ 
-                  backgroundColor: 'var(--bg-tertiary)', 
-                  padding: '4px 8px', 
-                  borderRadius: 'var(--border-radius-sm)',
-                  fontSize: '0.85rem',
-                  color: country.difficulty > 3 ? 'var(--status-bad)' : country.difficulty === 3 ? 'var(--status-warning)' : 'var(--status-good)'
-                }}>
-                  Difficulty: {country.difficulty}/5
-                </div>
-              </div>
-              
-              <p style={{ margin: 0, fontSize: '0.95rem' }}>{country.description}</p>
-              
-              <div className="grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-sm)', padding: 'var(--spacing-md) 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>GDP/Capita</div>
-                  <div style={{ fontWeight: 600 }}>${country.stats.gdpPerCapita.toLocaleString()}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Approval</div>
-                  <div style={{ fontWeight: 600 }}>{overallApproval}%</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Debt</div>
-                  <div style={{ fontWeight: 600 }}>${country.stats.nationalDebt}B</div>
-                </div>
-              </div>
-
-              <button 
-                className="btn btn-primary" 
-                style={{ alignSelf: 'flex-start' }}
-                onClick={() => handleSelectCountry(country)}
+      <div className="card" style={{ display: 'flex', gap: 'var(--spacing-xl)', minHeight: '600px', padding: 0, overflow: 'hidden' }}>
+        
+        {/* Left Side: Country List */}
+        <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+          <div style={{ padding: 'var(--spacing-md)' }}>
+            <input 
+              type="text" 
+              placeholder="Search countries..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '10px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '4px' }}
+            />
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {filteredCountries.map(country => (
+              <div 
+                key={country.name}
+                onClick={() => setPreviewCountry(country)}
+                style={{ 
+                  padding: '12px var(--spacing-md)', 
+                  cursor: 'pointer', 
+                  borderBottom: '1px solid var(--border-color)',
+                  backgroundColor: previewCountry.name === country.name ? 'rgba(0, 150, 255, 0.1)' : 'transparent',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
               >
-                Lead {country.name}
-              </button>
+                <span style={{ fontWeight: previewCountry.name === country.name ? 'bold' : 'normal', color: previewCountry.name === country.name ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                  {country.name}
+                </span>
+                {renderDifficultyDots(country.difficulty)}
+              </div>
+            ))}
+            {filteredCountries.length === 0 && (
+              <div style={{ padding: 'var(--spacing-md)', color: 'var(--text-muted)' }}>No countries found.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Side: Preview */}
+        <div style={{ flex: '2 1 500px', padding: 'var(--spacing-xl)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+          <div style={{ display: 'flex', gap: 'var(--spacing-lg)', alignItems: 'flex-start' }}>
+            {previewCountry.code && previewCountry.code !== 'un' && (
+              <img 
+                src={`https://flagcdn.com/w320/${previewCountry.code}.png`}
+                alt={`Flag of ${previewCountry.name}`}
+                style={{ width: '160px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+              />
+            )}
+            <div>
+              <h2 style={{ fontSize: '2.5rem', margin: '0 0 var(--spacing-sm) 0', color: 'var(--text-primary)' }}>{previewCountry.name}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Difficulty:</span>
+                {renderDifficultyDots(previewCountry.difficulty)}
+                <span style={{ color: 'var(--text-muted)', marginLeft: '4px', fontSize: '0.9rem' }}>
+                  ({previewCountry.difficulty === 1 ? 'Easy' : previewCountry.difficulty === 2 ? 'Medium' : 'Hard'})
+                </span>
+              </div>
             </div>
-          );
-        })}
+          </div>
+
+          <div style={{ backgroundColor: 'var(--bg-tertiary)', padding: 'var(--spacing-md)', borderRadius: 'var(--border-radius-sm)' }}>
+            <h3 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: '1.1rem', color: 'var(--accent-secondary)' }}>National Overview (2000)</h3>
+            <p style={{ margin: 0, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+              {previewCountry.description}
+            </p>
+          </div>
+
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-md)' }}>
+            <div style={{ padding: 'var(--spacing-sm)', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>GDP/Capita</div>
+              <div style={{ fontWeight: 600, fontSize: '1.2rem' }}>${previewCountry.stats.gdpPerCapita.toLocaleString()}</div>
+            </div>
+            <div style={{ padding: 'var(--spacing-sm)', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>National Debt</div>
+              <div style={{ fontWeight: 600, fontSize: '1.2rem' }}>${previewCountry.stats.nationalDebt.toLocaleString()}B</div>
+            </div>
+            <div style={{ padding: 'var(--spacing-sm)', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Min Leader Age</div>
+              <div style={{ fontWeight: 600, fontSize: '1.2rem' }}>{previewCountry.minLeaderAge}</div>
+            </div>
+          </div>
+
+          <div style={{ flexGrow: 1 }} />
+
+          <button 
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '16px', fontSize: '1.2rem' }}
+            onClick={handleSelectCountry}
+          >
+            Select {previewCountry.name}
+          </button>
+        </div>
+
       </div>
     </div>
   );
